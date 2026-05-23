@@ -33,11 +33,30 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    shm_size: 768mb
     volumes:
       - ./postgres-config/zz-overrides.conf:/etc/postgresql/conf.d/zz-overrides.conf:ro
       - ./postgres-logs:/var/log/postgresql
       - ./postgres-data:/var/lib/postgresql
 ```
+
+### Shared memory
+
+Docker mounts `/dev/shm` at 64MB by default. PostgreSQL uses this for `shared_buffers`, parallel query workers, and maintenance operations. This cannot be increased from inside the container — you need to set `shm_size` when creating the container.
+
+The entrypoint validates `/dev/shm` at startup and exits with a clear error if it is too small.
+
+Required size for a given `MEMORY_GB`:
+
+```
+MEMORY_GB × 384 MB
+```
+
+| `MEMORY_GB` | `shm_size` |
+| --- | --- |
+| `2` (default) | `768mb` |
+| `4` | `1536mb` |
+| `8` | `3072mb` |
 
 ### Environment Variables
 
@@ -48,7 +67,7 @@ services:
 | `LONG_QUERY_TIME` | `3` | Queries running longer than this many seconds are logged when slow query logging is enabled. |
 | `MEMORY_GB` | `2` | Memory budget for the database in gigabytes (minimum `2`). Used to calculate tuned settings (see [PostgreSQL Settings Calculator](https://database.gkanev.com/postgresql/)). |
 | `SLOW_QUERY_LOG` | `0` | Enables slow query logging via `log_min_duration_statement`. |
-| `TZ` | `UTC` | Timezone for logs and cron. |
+| `TZ` | `UTC` | Timezone. |
 | `VACUUM_ENABLED` | `0` | Enables the cron job which removes orphaned large objects, reclaims disk space by rewriting tables and updates planner statistics. |
 | `VACUUM_SCHEDULE` | `0 1 * * 6` | Cron expression for the vacuum job (default: Saturday at 01:00). Only used when the cron job is enabled. |
 

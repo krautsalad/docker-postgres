@@ -47,6 +47,14 @@ else
     log_min_duration_statement=-1
 fi
 
+# check shm_size
+required_shm_mb=$(awk -v gb="$memory_gb" 'BEGIN { printf "%d", gb * 384 }')
+shm_mb=$(df -m /dev/shm | awk 'NR==2 { print $2 }')
+if [ "$shm_mb" -lt "$required_shm_mb" ]; then
+    echo "ERROR: /dev/shm is ${shm_mb}MB but at least ${required_shm_mb}MB is required for MEMORY_GB=${memory_gb}. Set shm_size: ${required_shm_mb}mb in docker-compose or use --shm-size=${required_shm_mb}m with docker run." >&2
+    exit 1
+fi
+
 # see database.gkanev.com
 effective_cache_size=$(awk -v gb="$memory_gb" 'BEGIN { printf "%dMB", gb * 768 }')
 maintenance_work_mem=$(awk -v gb="$memory_gb" 'BEGIN { printf "%dMB", gb * 64 }')
