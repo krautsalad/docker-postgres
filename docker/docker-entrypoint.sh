@@ -25,7 +25,7 @@ rm -f /var/spool/cron/crontabs/root
 
 if [[ "$(printf '%s' "$VACUUM_ENABLED" | tr '[:upper:]' '[:lower:]')" =~ ^(1|on|true|yes)$ ]]; then
     {
-        echo "${VACUUM_SCHEDULE} psql -U postgres -Atq -c \"SELECT datname FROM pg_database WHERE datallowconn AND datname <> 'template0';\" | xargs -n1 vacuumlo -U postgres -v && vacuumdb -U postgres --all --full --analyze --verbose >> /var/log/cron/cron.log 2>&1"
+        echo "${VACUUM_SCHEDULE} psql -U postgres -Atq -c \"SELECT datname FROM pg_database WHERE datallowconn AND NOT datistemplate;\" | xargs -r -n1 vacuumlo -U postgres -v && vacuumdb -U postgres --all --full --analyze --verbose >> /var/log/cron/cron.log 2>&1"
         echo ""
     } > /var/spool/cron/crontabs/root
 fi
