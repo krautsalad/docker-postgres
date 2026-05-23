@@ -8,6 +8,7 @@ ln -sf /proc/$$/fd/1 /var/log/cron/cron.log
 
 # set timezone
 export TZ="${TZ:-UTC}"
+export PGTZ="${TZ}"
 ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime
 
 # set include_dir in existing installations
